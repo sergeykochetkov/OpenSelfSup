@@ -1,5 +1,6 @@
 import random
-
+import glob
+import os
 import PIL.ImageFilter
 import cv2
 import inspect
@@ -100,6 +101,21 @@ class GaussianBlur(object):
         repr_str = self.__class__.__name__
         return repr_str
 
+'''
+@PIPELINES.register_module
+class Resize(object):
+
+    def __init__(self, size):
+        self.size=size
+        
+    def __call__(self, img):
+        img = img.resize(self.size)
+        return img
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        return repr_str
+'''
 
 @PIPELINES.register_module
 class AugLy(object):
@@ -149,6 +165,54 @@ class AugLy(object):
         img_output = fn(img)
 
         return img_output
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        return repr_str
+
+
+@PIPELINES.register_module
+class AugLyOverlay(object):
+
+    def __init__(self, src_jpg_path):
+        self.jpgs = list(glob.glob(os.path.join(src_jpg_path, '*.jpg')))
+
+    def __call__(self, img):
+        if random.uniform(0,1.0)>0.5:
+            img_output = self._overlay_image(img)
+        else:
+            img_output = self._overlay_background(img)
+        img_output = img_output.convert('RGB')
+        img_output = img_output.resize(img.size)
+        return img_output
+
+    def _overlay_image(self, img):
+
+        overlay = random.choice(self.jpgs)
+        overlay = PIL.Image.open(overlay)
+        img_output = F.overlay_image(img, overlay,
+                                     opacity=random.uniform(0.5,1.0),
+                                     overlay_size=random.uniform(0.5,1.0),
+                                     x_pos=random.uniform(0.1,0.9),
+                                     y_pos=random.uniform(0.1,0.9))
+
+        return img_output
+
+    def _overlay_background(self, img):
+        background_image = random.choice(self.jpgs)
+        background_image = PIL.Image.open(background_image)
+
+        img_output=F.overlay_onto_background_image(
+            img,
+            background_image,
+            opacity=random.uniform(0.5, 1.0),
+            overlay_size=random.uniform(0.5, 1.0),
+            x_pos=random.uniform(0.1, 0.9),
+            y_pos=random.uniform(0.1, 0.9),
+            scale_bg=True)
+
+        return img_output
+
 
     def __repr__(self):
         repr_str = self.__class__.__name__
