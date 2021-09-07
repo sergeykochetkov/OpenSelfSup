@@ -32,6 +32,10 @@ img_norm_cfg = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 train_pipeline = [
     dict(type='RandomResizedCrop', size=224, scale=(0.2, 1.)),
     dict(
+                    type='AugLy',
+                    sigma_min=0.1,
+                    sigma_max=2.0),
+    dict(
         type='RandomAppliedTrans',
         transforms=[
             dict(
@@ -62,7 +66,7 @@ if not prefetch:
 
 data = dict(
     imgs_per_gpu=64,  # total 32*8=256
-    workers_per_gpu=16,
+    workers_per_gpu=0,
     drop_last=True,
     train=dict(
         type=dataset_type,
@@ -79,3 +83,5 @@ lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 checkpoint_config = dict(interval=1)
 # runtime settings
 total_epochs = 20
+
+work_dir='work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc'
