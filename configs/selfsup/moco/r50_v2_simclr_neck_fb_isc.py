@@ -2,7 +2,7 @@ _base_ = '../../base.py'
 # model settings
 model = dict(
     type='MOCO',
-    pretrained=None,
+    pretrained='torchvision://resnet50',
     queue_len=65536,
     feat_dim=128,
     momentum=0.999,
@@ -30,11 +30,8 @@ data_train_root = '/home/skochetkov/Documents/isc/data/fb-isc-data-training-imag
 dataset_type = 'ContrastiveDataset'
 img_norm_cfg = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 train_pipeline = [
-    dict(type='RandomResizedCrop', size=224, scale=(0.2, 1.)),
-    dict(
-                    type='AugLy',
-                    sigma_min=0.1,
-                    sigma_max=2.0),
+    dict(type='RandomResizedCrop', size=224, scale=(0.5, 1.)),
+    dict(type='AugLy'),
     dict(
         type='RandomAppliedTrans',
         transforms=[
@@ -65,8 +62,8 @@ if not prefetch:
     train_pipeline.extend([dict(type='ToTensor'), dict(type='Normalize', **img_norm_cfg)])
 
 data = dict(
-    imgs_per_gpu=64,  # total 32*8=256
-    workers_per_gpu=0,
+    imgs_per_gpu=128,  # total 32*8=256
+    workers_per_gpu=16,
     drop_last=True,
     train=dict(
         type=dataset_type,
@@ -85,3 +82,7 @@ checkpoint_config = dict(interval=1)
 total_epochs = 20
 
 work_dir='work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc'
+
+# apex
+use_fp16 = True
+optimizer_config = dict(use_fp16=use_fp16)  # grad_clip, coalesce, bucket_size_mb, fp16

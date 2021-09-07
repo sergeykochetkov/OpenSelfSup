@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CFG=/home/skochetkov/Documents/OpenSelfSup/configs/selfsup/moco/effnet_b1_simclr_neck_screenshot.py
+CFG=/home/skochetkov/Documents/OpenSelfSup/configs/selfsup/moco/r50_v2_simclr_neck_fb_isc.py
 
 tools/dist_train.sh $CFG 2
 

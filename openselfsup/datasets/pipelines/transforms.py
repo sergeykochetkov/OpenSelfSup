@@ -104,9 +104,8 @@ class GaussianBlur(object):
 @PIPELINES.register_module
 class AugLy(object):
 
-    def __init__(self, sigma_min, sigma_max):
-        self.sigma_min = sigma_min
-        self.sigma_max = sigma_max
+    def __init__(self):
+        pass
 
     def _overlay_text(self, img):
         text_length = random.randint(1, 10)
@@ -129,29 +128,27 @@ class AugLy(object):
             x_pos=x_pos,
             y_pos=y_pos)
 
+        img = img.convert('RGB')
         return img
+
     def _apply_filter(self, img):
-        filter_type=random.choice([PIL.ImageFilter.BLUR,PIL.ImageFilter.CONTOUR, PIL.ImageFilter.DETAIL, PIL.ImageFilter.EDGE_ENHANCE, PIL.ImageFilter.EDGE_ENHANCE_MORE, PIL.ImageFilter.EMBOSS, PIL.ImageFilter.FIND_EDGES ])
+        filter_type = random.choice(
+            [PIL.ImageFilter.BLUR, PIL.ImageFilter.CONTOUR, PIL.ImageFilter.DETAIL, PIL.ImageFilter.EDGE_ENHANCE,
+             PIL.ImageFilter.EDGE_ENHANCE_MORE, PIL.ImageFilter.EMBOSS, PIL.ImageFilter.FIND_EDGES])
         return img.filter(filter_type)
 
     def _brightness(self, img):
-        return F.brightness(img, factor=random.uniform(0.5,2))
-
-    def _change_aspect(self, img):
-        h,w=img.size
-        img=F.change_aspect_ratio(img, ratio=random.uniform(0.5,2.0))
-
-        img = F.clip_image_size(img,min_resolution=h,max_resolution=h)
-        return img
+        return F.brightness(img, factor=random.uniform(0.5, 2))
 
     def _change_contrast(self, img):
-        return F.contrast(img, factor=random.uniform(0.5,2))
+        return F.contrast(img, factor=random.uniform(0.5, 2))
 
     def __call__(self, img):
-        fn=random.choice([self._overlay_text, self._apply_filter, self._brightness, self._change_aspect, self._change_contrast])
-        return fn(img)
+        fn = random.choice(
+            [self._overlay_text, self._apply_filter, self._brightness, self._change_contrast])
+        img_output = fn(img)
 
-
+        return img_output
 
     def __repr__(self):
         repr_str = self.__class__.__name__
