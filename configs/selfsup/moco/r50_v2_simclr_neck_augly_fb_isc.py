@@ -1,6 +1,6 @@
 _base_ = '../../base.py'
 # model settings
-img_size = 256
+img_size = 224
 model = dict(
     type='MOCO',
     pretrained='torchvision://resnet50',
@@ -32,45 +32,18 @@ dataset_type = 'ContrastiveDataset'
 img_norm_cfg = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 train_pipeline = [
     dict(type='Resize', size=(img_size, img_size)),
-    dict(type='RandomResizedCrop', size=224, scale=(0.5, 1.)),
-    dict(type='AugLy'),
-    dict(type='RandomAppliedTrans',
-         transforms=[
-             dict(type='AugLyOverlay',
-                  src_jpg_path='/home/skochetkov/Documents/isc/data/fb-isc-data-training-images')],
-         p=0.2),
-
-    dict(
-        type='RandomAppliedTrans',
-        transforms=[
-            dict(
-                type='ColorJitter',
-                brightness=0.4,
-                contrast=0.4,
-                saturation=0.4,
-                hue=0.1)
-        ],
-        p=0.8),
-    dict(type='RandomGrayscale', p=0.2),
-    dict(
-        type='RandomAppliedTrans',
-        transforms=[
-            dict(
-                type='GaussianBlur',
-                sigma_min=0.1,
-                sigma_max=2.0)
-        ],
-        p=0.5),
-    dict(type='RandomHorizontalFlip'),
+    dict(type='AugLy', img_size=img_size,
+         src_jpg_path='/home/skochetkov/Documents/isc/data/fb-isc-data-training-images'),
 ]
 
 # prefetch
 prefetch = False
-if not prefetch:
-    train_pipeline.extend([dict(type='ToTensor'), dict(type='Normalize', **img_norm_cfg)])
+
+normalization_pipeline = [dict(type='Resize', size=(img_size, img_size)), dict(type='ToTensor'),
+                          dict(type='Normalize', **img_norm_cfg)]
 
 data = dict(
-    imgs_per_gpu=128,  # total 32*8=256
+    imgs_per_gpu=128,  # 128,  # total 32*8=256
     workers_per_gpu=16,
     drop_last=True,
     train=dict(
@@ -79,6 +52,7 @@ data = dict(
             list_file=data_train_list, root=data_train_root,
             **data_source_cfg),
         pipeline=train_pipeline,
+        normalization_pipeline=normalization_pipeline,
         prefetch=prefetch,
     ))
 # optimizer
@@ -88,7 +62,7 @@ lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 checkpoint_config = dict(interval=1)
 # runtime settings
 total_epochs = 20
-load_from = '/home/skochetkov/Documents/OpenSelfSup/work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc/latest.pth'
+load_from = None #'/home/skochetkov/Documents/OpenSelfSup/work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc/latest.pth'
 work_dir = 'work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc'
 
 # apex

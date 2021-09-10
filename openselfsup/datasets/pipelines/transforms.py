@@ -10,6 +10,7 @@ import augly.image.functional as F
 import augly.utils as utils
 
 import torch
+import torchvision
 from torchvision import transforms as _transforms
 
 from openselfsup.utils import build_from_cfg
@@ -101,29 +102,23 @@ class GaussianBlur(object):
         repr_str = self.__class__.__name__
         return repr_str
 
-'''
-@PIPELINES.register_module
-class Resize(object):
-
-    def __init__(self, size):
-        self.size=size
-        
-    def __call__(self, img):
-        img = img.resize(self.size)
-        return img
-
-    def __repr__(self):
-        repr_str = self.__class__.__name__
-        return repr_str
-'''
 
 @PIPELINES.register_module
 class AugLy(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, img_size, src_jpg_path):
+        self._overlay = AugLyOverlay(src_jpg_path)
+        self._random_crop_fn = torchvision.transforms.RandomResizedCrop(size=img_size, scale=(0.8, 1.),
+                                                                        ratio=(0.8, 1.2))
 
-    def _overlay_text(self, img):
+        self._augms = [(self._random_crop_fn,), (self._random_crop_fn, self._overlay_text_fn), (self._color_jitter_fn,),
+                       (self._overlay,), (self._hflip,)]
+        self._probs = [3, 2, 1, 1, 0.5]
+
+    def _hflip(self, img):
+        return F.hflip(img)
+
+    def _overlay_text_fn(self, img):
         text_length = random.randint(1, 10)
         text = random.sample(list(range(0, 255)), text_length)
 
@@ -147,22 +142,20 @@ class AugLy(object):
         img = img.convert('RGB')
         return img
 
-    def _apply_filter(self, img):
-        filter_type = random.choice(
-            [PIL.ImageFilter.BLUR, PIL.ImageFilter.CONTOUR, PIL.ImageFilter.DETAIL, PIL.ImageFilter.EDGE_ENHANCE,
-             PIL.ImageFilter.EDGE_ENHANCE_MORE, PIL.ImageFilter.EMBOSS, PIL.ImageFilter.FIND_EDGES])
-        return img.filter(filter_type)
-
-    def _brightness(self, img):
-        return F.brightness(img, factor=random.uniform(0.5, 2))
-
-    def _change_contrast(self, img):
-        return F.contrast(img, factor=random.uniform(0.5, 2))
+    def _color_jitter_fn(self, img):
+        brightness_factor = random.uniform(0.5, 1.5)
+        contrast_factor = random.uniform(0.5, 1.5)
+        saturation_factor = random.uniform(0.5, 1.5)
+        return F.color_jitter(img, brightness_factor=brightness_factor, contrast_factor=contrast_factor,
+                              saturation_factor=saturation_factor)
 
     def __call__(self, img):
-        fn = random.choice(
-            [self._overlay_text, self._apply_filter, self._brightness, self._change_contrast])
-        img_output = fn(img)
+        fn = random.choices(
+            self._augms, weights=self._probs, k=1)[0]
+
+        img_output = img
+        for f in fn:
+            img_output = f(img_output)
 
         return img_output
 
@@ -171,48 +164,31 @@ class AugLy(object):
         return repr_str
 
 
-@PIPELINES.register_module
 class AugLyOverlay(object):
 
     def __init__(self, src_jpg_path):
         self.jpgs = list(glob.glob(os.path.join(src_jpg_path, '*.jpg')))
 
     def __call__(self, img):
-        if random.uniform(0,1.0)>0.5:
-            img_output = self._overlay_image(img)
+        overlay = random.choice(self.jpgs)
+        overlay = PIL.Image.open(overlay)
+        img_output = self._random_overlay(img, overlay)
+
+        if random.uniform(0, 1.0) > 0.5:
+            img_output = self._random_overlay(img, overlay)
         else:
-            img_output = self._overlay_background(img)
+            img_output = self._random_overlay(overlay, img)
         img_output = img_output.convert('RGB')
         img_output = img_output.resize(img.size)
         return img_output
 
-    def _overlay_image(self, img):
-
-        overlay = random.choice(self.jpgs)
-        overlay = PIL.Image.open(overlay)
+    def _random_overlay(self, img, overlay):
         img_output = F.overlay_image(img, overlay,
-                                     opacity=random.uniform(0.5,1.0),
-                                     overlay_size=random.uniform(0.5,1.0),
-                                     x_pos=random.uniform(0.1,0.9),
-                                     y_pos=random.uniform(0.1,0.9))
-
+                                     opacity=random.uniform(0.8, 1.0),
+                                     overlay_size=random.uniform(0.3, 1.0),
+                                     x_pos=random.uniform(0.0, 0.5),
+                                     y_pos=random.uniform(0.0, 0.5))
         return img_output
-
-    def _overlay_background(self, img):
-        background_image = random.choice(self.jpgs)
-        background_image = PIL.Image.open(background_image)
-
-        img_output=F.overlay_onto_background_image(
-            img,
-            background_image,
-            opacity=random.uniform(0.5, 1.0),
-            overlay_size=random.uniform(0.5, 1.0),
-            x_pos=random.uniform(0.1, 0.9),
-            y_pos=random.uniform(0.1, 0.9),
-            scale_bg=True)
-
-        return img_output
-
 
     def __repr__(self):
         repr_str = self.__class__.__name__
