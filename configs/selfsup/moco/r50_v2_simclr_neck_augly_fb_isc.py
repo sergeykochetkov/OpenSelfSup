@@ -17,7 +17,7 @@ model = dict(
         type='NonLinearNeckSimCLR',  # SimCLR non-linear neck
         in_channels=2048,
         hid_channels=2048,
-        out_channels=128,
+        out_channels=2048,
         num_layers=2,
         with_avg_pool=True),
     head=dict(type='ContrastiveHead', temperature=0.2))
@@ -62,8 +62,7 @@ lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 checkpoint_config = dict(interval=1)
 # runtime settings
 total_epochs = 20
-load_from = None #'/home/skochetkov/Documents/OpenSelfSup/work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc/latest.pth'
-work_dir = 'work_dirs/selfsup/moco/r50_v2_simclr_neck_fb_isc'
+#resume_from = '/home/skochetkov/Documents/OpenSelfSup/work_dirs/selfsup/moco/r50_v2_simclr_neck_augly_fb_isc/latest.pth'
 
 # apex
 use_fp16 = True
