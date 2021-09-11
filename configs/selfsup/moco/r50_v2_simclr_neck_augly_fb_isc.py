@@ -17,7 +17,7 @@ model = dict(
         type='NonLinearNeckSimCLR',  # SimCLR non-linear neck
         in_channels=2048,
         hid_channels=2048,
-        out_channels=2048,
+        out_channels=128,
         num_layers=2,
         with_avg_pool=True),
     head=dict(type='ContrastiveHead', temperature=0.2))
@@ -56,7 +56,7 @@ data = dict(
         prefetch=prefetch,
     ))
 # optimizer
-optimizer = dict(type='SGD', lr=0.03, weight_decay=0.0001, momentum=0.9)
+optimizer = dict(type='SGD', lr=0.1, weight_decay=0.0001, momentum=0.9)
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 checkpoint_config = dict(interval=1)
