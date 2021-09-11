@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CFG=/home/skochetkov/Documents/OpenSelfSup/configs/selfsup/moco/r50_v2_simclr_neck_augly_fb_isc.py
+CFG=configs/selfsup/simclr/r50_bs256_ep200_fb_isc.py
 
-tools/dist_train.sh $CFG 2
+tools/dist_train.sh $CFG 4
 
 #python tools/train.py $CFG --gpus 0

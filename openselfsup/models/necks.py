@@ -351,3 +351,24 @@ class AvgPoolNeck(nn.Module):
     def forward(self, x):
         assert len(x) == 1
         return [self.avg_pool(x[0])]
+
+
+@NECKS.register_module
+class GeMNeck(nn.Module):
+
+    def __init__(self):
+        super(GeMNeck, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.p = 3
+
+    def init_weights(self, **kwargs):
+        pass
+
+    def forward(self, x):
+        assert len(x) == 1
+        x=x[0]
+        x = torch.pow(x, p)
+        x = self.avg_pool(x)
+        x = torch.pow(x, 1 / self.p)
+
+        return [x]
