@@ -367,7 +367,7 @@ class GeMNeck(nn.Module):
     def forward(self, x):
         assert len(x) == 1
         x=x[0]
-        x = torch.pow(x, p)
+        x = torch.pow(x, self.p)
         x = self.avg_pool(x)
         x = torch.pow(x, 1 / self.p)
 
