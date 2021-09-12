@@ -31,6 +31,7 @@ data_train_root = '/home/skochetkov/Documents/isc/data/fb-isc-data-training-imag
 dataset_type = 'ContrastiveDataset'
 img_norm_cfg = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 train_pipeline = [
+    dict(type='RandomResizedCrop', size=img_size),
     dict(type='Resize', size=(img_size, img_size)),
     dict(type='AugLy', img_size=img_size,
          src_jpg_path='/home/skochetkov/Documents/isc/data/fb-isc-data-training-images'),
@@ -39,7 +40,9 @@ train_pipeline = [
 # prefetch
 prefetch = False
 
-normalization_pipeline = [dict(type='Resize', size=(img_size, img_size)), dict(type='ToTensor'),
+normalization_pipeline = [
+    dict(type='RandomResizedCrop', size=img_size),
+    dict(type='Resize', size=(img_size, img_size)), dict(type='ToTensor'),
                           dict(type='Normalize', **img_norm_cfg)]
 
 data = dict(

@@ -416,6 +416,7 @@ class ResNet(nn.Module):
             x = res_layer(x)
             if i + 1 in self.out_indices:
                 outs.append(x)
+                #print(f' i={i} {x.shape}')
         # r50: 1-256x56x56; 2-512x28x28; 3-1024x14x14; 4-2048x7x7
         return tuple(outs)
 

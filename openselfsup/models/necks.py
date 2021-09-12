@@ -359,7 +359,7 @@ class GeMNeck(nn.Module):
     def __init__(self):
         super(GeMNeck, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.p = 3
+        self.p = 1
 
     def init_weights(self, **kwargs):
         pass
@@ -367,8 +367,11 @@ class GeMNeck(nn.Module):
     def forward(self, x):
         assert len(x) == 1
         x=x[0]
-        x = torch.pow(x, self.p)
+        if self.p!=1:
+            x = torch.pow(x, self.p)
         x = self.avg_pool(x)
-        x = torch.pow(x, 1 / self.p)
-
+        if self.p != 1:
+            x = torch.pow(x, 1 / self.p)
+        x = torch.squeeze(x, dim=-1)
+        x = torch.squeeze(x, dim=-1)
         return [x]

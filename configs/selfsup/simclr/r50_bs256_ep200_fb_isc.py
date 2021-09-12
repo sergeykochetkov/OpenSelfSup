@@ -11,7 +11,12 @@ model = dict(
         out_indices=[4],  # 0: conv-1, x: stage-x
         norm_cfg=dict(type='SyncBN')),
     neck=dict(
-        type='GeMNeck'),
+        type='NonLinearNeckSimCLR',  # SimCLR non-linear neck
+        in_channels=2048*49,
+        hid_channels=512,
+        out_channels=256,
+        num_layers=5,
+        with_avg_pool=False),
     head=dict(type='ContrastiveHead', temperature=0.1))
 # dataset settings
 data_source_cfg = dict(
@@ -22,7 +27,9 @@ data_train_list = '/DATA/SKochetkov/isc/data/image_list.txt'
 data_train_root = '/DATA/SKochetkov/isc/data/fb-isc-data-training-images'
 dataset_type = 'ContrastiveDataset'
 img_norm_cfg = dict(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
 train_pipeline = [
+    dict(type='RandomResizedCrop', size=img_size),
     dict(type='Resize', size=(img_size, img_size)),
     dict(type='AugLy', img_size=img_size,
          src_jpg_path='/DATA/SKochetkov/isc/data/fb-isc-data-training-images'),
@@ -31,8 +38,11 @@ train_pipeline = [
 # prefetch
 prefetch = False
 
-normalization_pipeline = [dict(type='Resize', size=(img_size, img_size)), dict(type='ToTensor'),
+normalization_pipeline = [
+    dict(type='RandomResizedCrop', size=img_size),
+    dict(type='Resize', size=(img_size, img_size)), dict(type='ToTensor'),
                           dict(type='Normalize', **img_norm_cfg)]
+
 
 data = dict(
     imgs_per_gpu=32,  # 128,  # total 32*8=256
@@ -48,7 +58,7 @@ data = dict(
         prefetch=prefetch,
     ))
 # optimizer
-optimizer = dict(type='SGD', lr=0.03, weight_decay=0.0001, momentum=0.9)
+optimizer = dict(type='Adam', lr=0.001, weight_decay=0.0001)
 # learning policy
 lr_config = dict(policy='CosineAnnealing', min_lr=0.)
 checkpoint_config = dict(interval=1)
