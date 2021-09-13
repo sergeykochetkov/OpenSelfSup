@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CFG=configs/selfsup/simclr/r50_bs256_ep200_fb_isc.py
+CFG=configs/selfsup/deepcluster/r50_fb_isc.py
 
 tools/dist_train.sh $CFG 4
 
